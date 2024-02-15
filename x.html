@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Mock Twitter Comment Analysis</title>
+    <link
+      href="https://cdn.jsdelivr.net/npm/tailwindcss@2.0.3/dist/tailwind.min.css"
+      rel="stylesheet"
+    />
+  </head>
+  <body class="bg-gray-100">
+    <div class="container mx-auto px-4">
+      <div class="max-w-xl mx-auto mt-10">
+          <!-- Post Section -->
+          <div class="bg-white p-5 rounded-lg shadow mb-4">
+              <!-- Username and Post Meta Data -->
+              <div class="flex items-center mb-2">
+                  <img src="user_avatar.png" alt="User Avatar" class="h-8 w-8 rounded-full mr-2"> <!-- Placeholder for user avatar -->
+                  <span class="font-semibold text-sm">@markmuigai</span> <!-- Mock username -->
+              </div>
+              <!-- Post Content -->
+              <div>
+                  <p>I've had a great time today at the concert!</p>
+              </div>
+          </div>
+          
+          <!-- Comment Section for the Post -->
+          <div class="bg-white p-5 rounded-lg shadow">
+              <div class="mb-4">
+                  <label for="commentInput" class="block text-lg font-semibold mb-2">Leave a Comment:</label>
+                  <textarea id="commentInput" class="w-full border rounded-lg p-2" rows="3" placeholder="Share your thoughts..."></textarea>
+              </div>
+              <button id="analyzeButton" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
+                  Comment
+              </button>
+              <div id="result" class="mt-4">
+                  <!-- Result will be displayed here -->
+              </div>
+          </div>
+      </div>
+  </div>
+  
+
+    <script>
+      document
+        .getElementById("analyzeButton")
+        .addEventListener("click", function () {
+          const commentText = document.getElementById("commentInput").value;
+          fetch("http://127.0.0.1:5000/predict", {
+            method: "POST",
+            body: new URLSearchParams({ comment: commentText }),
+            headers: {
+              "Content-Type": "application/x-www-form-urlencoded",
+            },
+          })
+            .then((response) => response.json())
+            .then((data) => {
+              const resultContainer = document.getElementById("result");
+              resultContainer.innerHTML = ""; // Clear previous results
+              if (data.length === 0) {
+                // No labels predicted, show "No toxicity detected"
+                const noToxicityLabel = document.createElement("span");
+                noToxicityLabel.textContent = "No toxicity detected";
+                noToxicityLabel.classList.add(
+                  "inline-block",
+                  "bg-green-500",
+                  "text-white",
+                  "px-3",
+                  "py-1",
+                  "rounded-full",
+                  "text-sm",
+                  "mr-2",
+                  "mb-2"
+                );
+                resultContainer.appendChild(noToxicityLabel);
+              } else {
+                // Display predicted labels with specific colors
+                data.forEach((category) => {
+                  const pill = document.createElement("span");
+                  pill.textContent = category;
+                  let bgColor = "bg-blue-500"; // Default color
+                  switch (category) {
+                    case "toxic":
+                      bgColor = "bg-red-500";
+                      break;
+                    case "severe_toxic":
+                      bgColor = "bg-red-700";
+                      break;
+                    case "obscene":
+                      bgColor = "bg-yellow-500";
+                      break;
+                    case "threat":
+                      bgColor = "bg-orange-500";
+                      break;
+                    case "insult":
+                      bgColor = "bg-green-500";
+                      break;
+                    case "identity_hate":
+                      bgColor = "bg-purple-500";
+                      break;
+                  }
+                  pill.classList.add(
+                    "inline-block",
+                    bgColor,
+                    "text-white",
+                    "px-3",
+                    "py-1",
+                    "rounded-full",
+                    "text-sm",
+                    "mr-2",
+                    "mb-2"
+                  );
+                  resultContainer.appendChild(pill);
+                });
+              }
+            })
+            .catch((error) => console.error("Error:", error));
+        });
+    </script>
+  </body>
+</html>
